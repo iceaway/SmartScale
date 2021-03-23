@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+<meta content="utf-8" http-equiv="encoding">
+
+<html>
+
+<head>
+  <title>
+    SmartScale
+  </title>
+  <script>
+    function updateTextInput(val) {
+      var xhttp = new XMLHttpRequest();
+      document.getElementById('target_weight_value').value = val;
+      xhttp.open("GET", "/set_weight_setpoint?value=" + val, true);
+      xhttp.send();
+    }
+
+    function updateRangeValue(val) {
+      max = document.getElementById('target_weight').max;
+      min = document.getElementById('target_weight').min;
+      set = parseFloat(val);
+      if (set > max) {
+        alert("Value to big!");
+        document.getElementById('target_weight').value = max;
+        document.getElementById('target_weight_value').value = max;
+      } else if (set < min) {
+        alert("Value too small!");
+        document.getElementById('target_weight').value = min;
+        document.getElementById('target_weight_value').value = min;
+      } else {
+        document.getElementById('target_weight').value = val;
+        var xhttp = new XMLHttpRequest();
+        xhttp.open("GET", "/set_weight_setpoint?value=" + val, true);
+        xhttp.send();
+      }
+    }
+
+    function resetRelay() {
+      var xhttp = new XMLHttpRequest();
+      xhttp.open("GET", "/reset_relay", true);
+      xhttp.send();
+    }
+
+    function tare_status() {
+      var xhttp = new XMLHttpRequest();
+      xhttp.onload = function () {
+        if (xhttp.status == 200) {
+          document.getElementById('tare_status').innerHTML = xhttp.response;
+          if (xhttp.response != "Done")
+            setTimeout(tare_status, 200);
+        } else {
+          console.log("error getting tare status");
+        }
+
+      };
+
+      xhttp.open("GET", "/tare_status", true);
+      xhttp.send();
+    }
+
+    function tare() {
+      var xhttp = new XMLHttpRequest();
+      xhttp.onload = function () {
+        if (xhttp.status == 200) {
+          // Typical action to be performed when the document is ready:
+          document.getElementById('tare_status').innerHTML = xhttp.response;
+          tare_status();
+        } else {
+          console.log("Error taring");
+        }
+
+      };
+
+      xhttp.open("GET", "/tare", true);
+      xhttp.send();
+    }
+
+    function updateWeight() {
+      var xhttp = new XMLHttpRequest();
+      xhttp.onload = function () {
+        if (xhttp.status == 200) {
+          document.getElementById('current_weight').innerHTML = xhttp.response;
+        } else {
+          console.log("error updating weight");
+        }
+        setTimeout(updateWeight, 1000);
+      };
+      xhttp.open("GET", "/weight", true);
+      xhttp.send();
+    }
+
+  </script>
+</head>
+
+<body onload="setTimeout(updateWeight, 100);">
+  <form name="smartscale">
+    <label for="target_weight">Target weight (g):</label><br />
+    <p>
+      <input type="range" name="target_weight" id="target_weight" min="5.0" max="30.0" step="0.5" value="%STARTWEIGHT%"
+        onchange="updateTextInput(this.value);">
+      <input type="text" id="target_weight_value" value="%STARTWEIGHT%"" onchange="updateRangeValue(this.value)" />
+    </p>
+    <p>
+      Current weight: <span id="current_weight">N/A</span> g
+    </p>
+    <p>
+      <input type="button" value="Tare" onclick="tare();" /> Status: <span id="tare_status">OK</span>
+    </p>
+    <p>
+      <input type="button" value="Reset relay" onclick="resetRelay();" />
+    </p>
+  </form>
+</body>
+
+</html>
