@@ -17,13 +17,10 @@
 #endif
 #include "config.h"
 #include "control.h"
-
-#define HX711_DOUT  5//mcu > HX711 dout pin, must be external interrupt capable!
-#define HX711_SCK   4 //mcu > HX711 sck pin
+#include "eeprom.h"
 
 //HX711 constructor:
 static HX711_ADC LoadCell(HX711_DOUT, HX711_SCK);
-
 
 static volatile boolean g_new_data_ready = false;
 static float g_last_weight = 0.0f;
@@ -43,14 +40,8 @@ ICACHE_RAM_ATTR void data_ready_isr()
 void loadcell_setup(void)
 {
     float calibration_value = 696.0f;
-    float f;
-#if defined(ESP8266) || defined(ESP32)
-    EEPROM.begin(EEP_SIZE);
-#endif
-    EEPROM.get(EEP_CALIBRATION_VALUE_ADDR, f); // uncomment this if you want to fetch the value from eeprom
-    /* Simple sanity check */
-    if (!isnan(f)) 
-        calibration_value = f;
+
+    calibration_value = eeprom_calfactor_get();
 
     LoadCell.begin();
     LoadCell.setSamplesInUse(8);
@@ -102,8 +93,8 @@ static void set_weight()
         if (Serial.available() > 0) {
             char c = Serial.read();
             if (c == 'y') {
-                control_set_setpoint(w);
-                w = control_get_setpoint();
+                eeprom_setpoint_set(w);
+                w = eeprom_setpoint_get();
                 Serial.println();
                 Serial.print("Stored value is: ");
                 Serial.println(w);
@@ -192,7 +183,7 @@ static void calibrate()
     Serial.println("Send 't' from serial monitor to set the tare offset.");
 
     // We need to disable interrupts during the calibration routine for some reason
-    detachInterrupt(digitalPinToInterrupt(HX711_DOUT));
+    noInterrupts();
 
     boolean _resume = false;
     while (_resume == false) {
@@ -244,14 +235,8 @@ static void calibrate()
         if (Serial.available() > 0) {
             char c = Serial.read();
             if (c == 'y') {
-#if defined(ESP8266) || defined(ESP32)
-                EEPROM.begin(EEP_SIZE);
-#endif
-                EEPROM.put(EEP_CALIBRATION_VALUE_ADDR, new_cal_value);
-#if defined(ESP8266) || defined(ESP32)
-                EEPROM.commit();
-#endif
-                EEPROM.get(EEP_CALIBRATION_VALUE_ADDR, new_cal_value);
+                eeprom_calfactor_set(new_cal_value);
+                new_cal_value = eeprom_calfactor_get();
                 Serial.print("Value ");
                 Serial.print(new_cal_value);
                 Serial.print(" saved to EEPROM address: ");
@@ -270,7 +255,7 @@ static void calibrate()
     Serial.println("For manual edit of the calibration value, send 'c' from serial monitor.");
     Serial.println("***");
 
-    attachInterrupt(digitalPinToInterrupt(HX711_DOUT), data_ready_isr, FALLING);
+    interrupts();
 }
 
 static void change_saved_cal_factor()
@@ -303,14 +288,8 @@ static void change_saved_cal_factor()
         if (Serial.available() > 0) {
             char inByte = Serial.read();
             if (inByte == 'y') {
-#if defined(ESP8266) || defined(ESP32)
-                EEPROM.begin(EEP_SIZE);
-#endif
-                EEPROM.put(EEP_CALIBRATION_VALUE_ADDR, new_cal_value);
-#if defined(ESP8266) || defined(ESP32)
-                EEPROM.commit();
-#endif
-                EEPROM.get(EEP_CALIBRATION_VALUE_ADDR, new_cal_value);
+                eeprom_calfactor_set(new_cal_value);
+                new_cal_value = eeprom_calfactor_get();
                 Serial.print("Value ");
                 Serial.print(new_cal_value);
                 Serial.print(" saved to EEPROM address: ");

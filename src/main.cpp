@@ -10,36 +10,19 @@
 #include "loadcell.h"
 #include "control.h"
 #include "config.h"
+#include "eeprom.h"
 
 /* 
  * TODO:
- * - Improve EEPROM handling
+ * - Improve EEPROM handling. Probably some EEPROM library available that 
+ *   can deal with checksums etc in a smarter way? Now we need to write
+ *   twice on each parameter update, once for updating the parameter
+ *   and once for recalculating the checksum.
  * - SoftAP mode to configure WLAN
- * - Update target weight corrupts EEPROM?
  * - Calibrate from web page
  * - Make webpage look nicer
+ * - mDNS / DNS server support
  */
-
-static bool check_eeprom(void)
-{
-    int i;
-    uint32_t checksum_calc, checksum_stored;
-    CRC32 crc;
-    EEPROM.begin(EEP_SIZE);
-
-    for (i = 0; i < (EEP_SIZE - EEP_CRC32_SIZE); ++i) {
-        crc.update(EEPROM.read(i));
-    }
-
-    checksum_calc = crc.finalize();
-    EEPROM.get(EEP_CRC32_ADDR, checksum_stored);
-    Serial.printf("Calculated CRC: %04X\n", checksum_calc);
-    Serial.println(checksum_calc);
-    Serial.printf("Stored CRC: %04X\n", checksum_stored);
-    Serial.println(checksum_stored);
-
-    return true;
-}
 
 void setup(void)
 {
@@ -48,7 +31,8 @@ void setup(void)
     Serial.println();
     Serial.println("Starting...");
     /* Check EEPROM validity */
-    check_eeprom();
+    Serial.println("Checking EEPROM...");
+    eeprom_setup();
     Serial.println("Setting up wifi and webserver...");
     webserver_setup();
     Serial.println("Setting up load cell...");

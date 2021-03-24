@@ -2,9 +2,9 @@
 #include <DNSServer.h>
 #include <FS.h>
 #include <LittleFS.h>
-#include "loadcell.h"
-#include "control.h"
+#include <WiFiManager.h>
 
+#define WEBSERVER_H
 
 #ifdef ESP32
     #include <WiFi.h>
@@ -15,6 +15,10 @@
 #endif
 #include <ESPAsyncWebServer.h>
 
+#include "loadcell.h"
+#include "control.h"
+#include "eeprom.h"
+
 static AsyncWebServer server(80);
 
 static const char *g_ssid = "Mondo Gnarp 2 Legacy";
@@ -24,7 +28,7 @@ String processor(const String& var)
 {
     Serial.println(var);
     if (var == "STARTWEIGHT") {
-        String weight = String(control_get_setpoint());
+        String weight = String(eeprom_setpoint_get());
         return weight;
     }
     return String();
@@ -73,7 +77,7 @@ static void set_weight_setpoint(AsyncWebServerRequest *request)
     String message;
     if (request->hasParam("value")) {
         message = request->getParam("value")->value();
-        control_set_setpoint(message.toFloat());
+        eeprom_setpoint_set(message.toFloat());
     } else {
         message = "No message sent";
     }
@@ -81,9 +85,10 @@ static void set_weight_setpoint(AsyncWebServerRequest *request)
     request->send(200, "text/plain", "");
 }
 
-
 void webserver_setup()
 {
+    //WiFiManager wifi;
+    //wifi.startConfigPortal("test", "test");
     WiFi.mode(WIFI_STA);
     WiFi.begin(g_ssid, g_password);
     if (WiFi.waitForConnectResult() != WL_CONNECTED) {
