@@ -14,11 +14,6 @@
 
 /* 
  * TODO:
- * - Improve EEPROM handling. Probably some EEPROM library available that 
- *   can deal with checksums etc in a smarter way? Now we need to write
- *   twice on each parameter update, once for updating the parameter
- *   and once for recalculating the checksum.
- * - SoftAP mode to configure WLAN
  * - Calibrate from web page
  * - Make webpage look nicer
  * - mDNS / DNS server support

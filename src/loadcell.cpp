@@ -1,16 +1,3 @@
-/*
-   Settling time (number of samples) and data filtering can be adjusted in the config.h file
-   For calibration and storing the calibration value in eeprom, see example file "Calibration.ino"
-
-   The update() function checks for new data and starts the next conversion. In order to acheive maximum effective
-   sample rate, update() should be called at least as often as the HX711 sample rate; >10Hz@10SPS, >80Hz@80SPS.
-
-   This example shows how call the update() function from an ISR with interrupt on the dout pin.
-   Try this if you experince longer settling time due to time consuming code in the loop(),
-   i.e. if you are refreshing an graphical LCD, etc.
-   The pin used for dout must be external interrupt capable.
-*/
-
 #include <HX711_ADC.h>
 #if defined(ESP8266) || defined(ESP32) || defined(AVR)
 #include <EEPROM.h>
@@ -26,6 +13,7 @@ static HX711_ADC LoadCell(HX711_DOUT, HX711_SCK);
 
 static volatile boolean g_new_data_ready = false;
 static float g_last_weight = 0.0f;
+static bool g_update_data = false;
 
 static void change_saved_cal_factor();
 static void calibrate();
@@ -33,10 +21,12 @@ static void calibrate();
 //interrupt routine:
 ICACHE_RAM_ATTR void data_ready_isr()
 {
-    if (LoadCell.update())
-    {
-        g_new_data_ready = 1;
-    }
+    /* 
+     * Only signal the loop function to update the data in the ISR.
+     * Previously the data was read from the ADC too, way too much to
+     * do in an ISR.
+     */
+    g_update_data = true;
 }
 
 void loadcell_setup(void)
@@ -119,16 +109,18 @@ void loadcell_loop(void)
     const int serial_print_interval = 1000; //increase value to slow down serial print activity
     static unsigned int t = millis(); 
     static bool print_weight = true;
+    bool new_data_ready = false;
 
-    // check for new data/start next conversion:
-    //if (LoadCell.update()) 
-    //    g_new_data_ready = true;
+    if (g_update_data) {
+        if (LoadCell.update())
+            new_data_ready = true;
+        g_update_data = false;
+    }
 
     // get smoothed value from the dataset:
-    if (g_new_data_ready) {
+    if (new_data_ready) {
         float f = LoadCell.getData();
         g_last_weight = f;
-        g_new_data_ready = false;
         
         if (print_weight && (millis() > (t + serial_print_interval))) { 
             Serial.print("Measured weight: ");
@@ -208,9 +200,6 @@ static void calibrate()
     Serial.println("Remove any load applied to the load cell.");
     Serial.println("Send 't' from serial monitor to set the tare offset.");
 
-    // We need to disable interrupts during the calibration routine for some reason
-    noInterrupts();
-
     boolean _resume = false;
     while (_resume == false) {
         LoadCell.update();
@@ -246,9 +235,7 @@ static void calibrate()
 
     Serial.println("Refresh dataset");
     LoadCell.refreshDataSet(); //refresh the dataset to be sure that the known mass is measured correct
-    Serial.println("getNewCalib");
     float new_cal_value = LoadCell.getNewCalibration(known_mass); //get the new calibration value
-
     Serial.print("New calibration value has been set to: ");
     Serial.print(new_cal_value);
     Serial.println(", use this as calibration value (calFactor) in your project sketch.");
@@ -280,8 +267,6 @@ static void calibrate()
     Serial.println("To re-calibrate, send 'r' from serial monitor.");
     Serial.println("For manual edit of the calibration value, send 'c' from serial monitor.");
     Serial.println("***");
-
-    interrupts();
 }
 
 static void change_saved_cal_factor()

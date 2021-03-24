@@ -10,11 +10,8 @@
 
 #define PRINT_INTERVAL  1000
 
-static float g_weight_setpoint = 18.0f;
-
 void control_setup(void)
 {
-    float weight;
     pinMode(RELAY_PIN, OUTPUT);
     digitalWrite(RELAY_PIN, 0);
 }
