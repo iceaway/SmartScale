@@ -1,8 +1,7 @@
+#include <FS.h>
 #include <Arduino.h>
 #include <DNSServer.h>
-#include <FS.h>
 #include <LittleFS.h>
-#include <WiFiManager.h>
 
 #define WEBSERVER_H
 
@@ -13,6 +12,7 @@
     #include <ESP8266WiFi.h>
     #include <ESPAsyncTCP.h>
 #endif
+#include <WiFiManager.h>
 #include <ESPAsyncWebServer.h>
 
 #include "loadcell.h"
@@ -21,12 +21,8 @@
 
 static AsyncWebServer server(80);
 
-static const char *g_ssid = "Mondo Gnarp 2 Legacy";
-static const char *g_password = "7ux59t12h4r";
-
 String processor(const String& var)
 {
-    Serial.println(var);
     if (var == "STARTWEIGHT") {
         String weight = String(eeprom_setpoint_get());
         return weight;
@@ -41,8 +37,6 @@ static void not_found(AsyncWebServerRequest *request)
 
 static void get_root(AsyncWebServerRequest *request)
 {
-    //request->send(200, "text/plain", "Hello, world");
-    Serial.println("Sending root...");
     request->send(LittleFS, "/index.html", "text/html", false, processor);
 }
 
@@ -87,14 +81,26 @@ static void set_weight_setpoint(AsyncWebServerRequest *request)
 
 void webserver_setup()
 {
-    //WiFiManager wifi;
-    //wifi.startConfigPortal("test", "test");
+    WiFiManager wifi;
+
+    wifi.setTimeout(180);
+    if (!wifi.autoConnect("SmartScale", "SmartScale!")) {
+      Serial.println("Failed to connect");
+      delay(3000);
+      ESP.reset();
+      delay(5000);
+    }
+
+    Serial.println("Successfully conneced to the configured WiFi");
+
+#if 0
     WiFi.mode(WIFI_STA);
     WiFi.begin(g_ssid, g_password);
     if (WiFi.waitForConnectResult() != WL_CONNECTED) {
         Serial.printf("Failed to connect to WiFi: %s!\n", g_ssid);
         return;
     }
+#endif
 
     Serial.print("IP Address: ");
     Serial.println(WiFi.localIP());

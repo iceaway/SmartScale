@@ -15,6 +15,8 @@
 #if defined(ESP8266) || defined(ESP32) || defined(AVR)
 #include <EEPROM.h>
 #endif
+#include <WiFiManager.h>
+
 #include "config.h"
 #include "control.h"
 #include "eeprom.h"
@@ -116,6 +118,7 @@ void loadcell_loop(void)
 {
     const int serial_print_interval = 1000; //increase value to slow down serial print activity
     static unsigned int t = millis(); 
+    static bool print_weight = true;
 
     // check for new data/start next conversion:
     //if (LoadCell.update()) 
@@ -123,15 +126,16 @@ void loadcell_loop(void)
 
     // get smoothed value from the dataset:
     if (g_new_data_ready) {
-        if (millis() > t + serial_print_interval) { 
-            float f = LoadCell.getData();
-            g_new_data_ready = false;
-            Serial.print("Load_cell output val: ");
+        float f = LoadCell.getData();
+        g_last_weight = f;
+        g_new_data_ready = false;
+        
+        if (print_weight && (millis() > (t + serial_print_interval))) { 
+            Serial.print("Measured weight: ");
             Serial.println(f);
             //Serial.print("  ");
             //Serial.println(millis() - t);
             t = millis();
-            g_last_weight = f;
         }        
     }
 
@@ -141,6 +145,21 @@ void loadcell_loop(void)
         int i = 0;
 
         switch (inByte) {
+        case 'h':
+            Serial.println("Available commands:");
+            Serial.println("t    - tare");
+            Serial.println("r    - calibrate");
+            Serial.println("c    - change calibration factor");
+            Serial.println("d    - dump EEPROM contents");
+            Serial.println("w    - set weight setpoint");
+            Serial.println("z    - reset wifi settings");
+            Serial.println("p    - enable/disable weight output");
+            break;
+
+        case 'p':
+          print_weight = !print_weight;
+          break;
+
         case 't':
             LoadCell.tareNoDelay();
             break;
@@ -168,6 +187,13 @@ void loadcell_loop(void)
 
         case 'w':
             set_weight();
+            break;
+
+        case 'z':
+            WiFiManager wifi;
+            noInterrupts();
+            wifi.resetSettings();
+            ESP.reset();
             break;
         }
             
