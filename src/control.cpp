@@ -6,8 +6,6 @@
 #include "config.h"
 #include "eeprom.h"
 
-#define RELAY_PIN   0 // D3
-
 #define PRINT_INTERVAL  1000
 
 void control_setup(void)

@@ -18,8 +18,9 @@
 #include "loadcell.h"
 #include "control.h"
 #include "eeprom.h"
+#include "config.h"
 
-static AsyncWebServer server(80);
+static AsyncWebServer server(HTTP_PORT);
 
 String processor(const String& var)
 {
@@ -93,15 +94,6 @@ void webserver_setup()
 
     Serial.println("Successfully conneced to the configured WiFi");
 
-#if 0
-    WiFi.mode(WIFI_STA);
-    WiFi.begin(g_ssid, g_password);
-    if (WiFi.waitForConnectResult() != WL_CONNECTED) {
-        Serial.printf("Failed to connect to WiFi: %s!\n", g_ssid);
-        return;
-    }
-#endif
-
     Serial.print("IP Address: ");
     Serial.println(WiFi.localIP());
 
@@ -127,3 +119,4 @@ void webserver_setup()
 
     server.begin();
 }
+

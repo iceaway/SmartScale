@@ -32,13 +32,13 @@ ICACHE_RAM_ATTR void data_ready_isr()
 void loadcell_setup(void)
 {
     float calibration_value = 696.0f;
+    unsigned long stabilizingtime = 2000;
+    bool tare = true;
 
     calibration_value = eeprom_calfactor_get();
 
     LoadCell.begin();
     LoadCell.setSamplesInUse(8);
-    unsigned long stabilizingtime = 2000;
-    boolean tare = true;
     LoadCell.start(stabilizingtime, tare);
     if (LoadCell.getTareTimeoutFlag() || LoadCell.getSignalTimeoutFlag()) {
         Serial.println("Timeout, check MCU>HX711 wiring and pin designations");
@@ -133,10 +133,10 @@ void loadcell_loop(void)
 
     // receive command from serial terminal, send 't' to initiate tare operation:
     if (Serial.available() > 0) {
-        char inByte = Serial.read();
+        char c = Serial.read();
         int i = 0;
 
-        switch (inByte) {
+        switch (c) {
         case 'h':
             Serial.println("Available commands:");
             Serial.println("t    - tare");
@@ -146,11 +146,21 @@ void loadcell_loop(void)
             Serial.println("w    - set weight setpoint");
             Serial.println("z    - reset wifi settings");
             Serial.println("p    - enable/disable weight output");
+            Serial.println("s    - display stored parameters");
+            break;
+
+        case 's':
+            Serial.println("Stored parameters");
+            Serial.println("=================");
+            Serial.print("Calibration factor: ");
+            Serial.println(eeprom_calfactor_get());
+            Serial.print("Target weight: ");
+            Serial.println(eeprom_setpoint_get());
             break;
 
         case 'p':
-          print_weight = !print_weight;
-          break;
+            print_weight = !print_weight;
+            break;
 
         case 't':
             LoadCell.tareNoDelay();
@@ -168,11 +178,10 @@ void loadcell_loop(void)
             EEPROM.begin(EEP_SIZE);
             Serial.println("EEPROM dump:");
             for (i = 0; i < 512; ++i) {
-              uint8_t b = EEPROM.read(i);
-              if (!i || ((i % 16) == 0))
-                Serial.printf("\n%03X: ", i);
-              Serial.printf("%02X ", b);
-
+                uint8_t b = EEPROM.read(i);
+                if (!i || ((i % 16) == 0))
+                    Serial.printf("\n%03X: ", i);
+                Serial.printf("%02X ", b);
             }
             Serial.println();
             break;
@@ -194,19 +203,21 @@ void loadcell_loop(void)
 
 static void calibrate()
 {
+    bool _resume = false;
+    float known_mass = 0.0f;
+    float new_cal_value;
+
     Serial.println("***");
     Serial.println("Start calibration:");
     Serial.println("Place the load cell an a level stable surface.");
     Serial.println("Remove any load applied to the load cell.");
     Serial.println("Send 't' from serial monitor to set the tare offset.");
-
-    boolean _resume = false;
     while (_resume == false) {
         LoadCell.update();
         if (Serial.available() > 0) {
             if (Serial.available() > 0) {
-                char inByte = Serial.read();
-                if (inByte == 't')
+                char c = Serial.read();
+                if (c == 't')
                     LoadCell.tareNoDelay();
             }
         }
@@ -219,7 +230,6 @@ static void calibrate()
     Serial.println("Now, place your known mass on the loadcell.");
     Serial.println("Then send the weight of this mass (i.e. 100.0) from serial monitor.");
 
-    float known_mass = 0;
     _resume = false;
     while (_resume == false) {
         LoadCell.update();
@@ -235,7 +245,7 @@ static void calibrate()
 
     Serial.println("Refresh dataset");
     LoadCell.refreshDataSet(); //refresh the dataset to be sure that the known mass is measured correct
-    float new_cal_value = LoadCell.getNewCalibration(known_mass); //get the new calibration value
+    new_cal_value = LoadCell.getNewCalibration(known_mass); //get the new calibration value
     Serial.print("New calibration value has been set to: ");
     Serial.print(new_cal_value);
     Serial.println(", use this as calibration value (calFactor) in your project sketch.");

@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <ESP8266WebServer.h>
+#include <ESP8266mDNS.h>
 #include <FS.h>
 #include <LittleFS.h>
 #if defined(ESP8266) || defined(ESP32) || defined(AVR)
@@ -21,7 +22,12 @@
 
 void setup(void)
 {
+    String mdnsname = "SmartScale-" + String(ESP.getChipId(), HEX);
+
     Serial.begin(9600);
+    /* Delay here to not miss any output as we go from upload mode
+     * to monitor mode.
+     */
     delay(500);
     Serial.println();
     Serial.println("Starting...");
@@ -38,6 +44,15 @@ void setup(void)
     if (!LittleFS.begin()) {
         Serial.println("Failed to setup LittleFS!");
     }
+
+    if (MDNS.begin(mdnsname)) {
+        Serial.print("mDNS service started: ");
+        Serial.println(mdnsname);
+        MDNS.addService("http", "tcp", HTTP_PORT);
+    } else {
+        Serial.println("Failed to start mDNS service");
+    }
+
     Serial.println("Setup complete!");
 }
 
@@ -45,4 +60,5 @@ void loop(void)
 {
     loadcell_loop();
     control_loop();
+    MDNS.update();
 }
