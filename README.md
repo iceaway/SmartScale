@@ -21,6 +21,22 @@ file. Connect another pin on the ESP8266 to a relay (I use something like
 and ground. Make sure the relay can be controlled by a 3.3V signal, if you 
 intend to power it directly from the ESP8266.
 
+Here is what the prototype on my desk looks like:
+<img src="https://github.com/iceaway/SmartScale/blob/master/images/everything.jpg?raw=true" alt="components making up the smart scale project" width="50%">
+1. NodeMCUv3 microcontroller
+2. HX711 breakout board
+3. 3D-printed scale platform with 1 kg load cell inside
+4. Plastic box I had lying around for keeping the mains voltage safely away from poking fingers. The white cable has a regular power socket on the end for connecting the power plug of the scale. On the side of the box (out of view) is a [C14](https://www.electrokit.com/produkt/natbrunn-c14-jordad-flatstift-6-3mm/) socket for connecting the mains voltage. Inside this box the relay is located.
+
+The connections are as follows:
+| MCU | HX177 | RELAY |
+| --- | ----- | ----- |
+| D1  | DOUT/DT | NC  |
+| D2  | SCK   | NC    |
+| D3  | NC    | S/Control |
+| 3.3V | VCC | VCC |
+| GND | GND | GND |
+
 ## Usage
 When powered on the first time, no wifi-credentials will be stored in the
 ESP8266, and it will start an Access Point called "SmartScale" that you can
