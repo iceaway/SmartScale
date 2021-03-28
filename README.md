@@ -47,6 +47,9 @@ mDNS is not supported, so you will have to check the IP-address on the serial
 console or on your DHCP server. On the web page, it is possible to manually 
 tare the scale, see the current weight, configure the target weight (at which
 weight the relay will be toggled), and reset the relay for making another run.
+Below is a screenshot of the webpage on a mobile device.
+
+<img src="https://github.com/iceaway/SmartScale/blob/master/images/screenshot.jpg?raw=true" alt="smartscale screenshot">
 
 The serial inteface has some basic configuration
 options, including calibration, which is not available on the web page yet. 
@@ -69,5 +72,5 @@ information on the possible commands.
 
 ### Misc
 
-- [ ] Add photos of the scale and how it is set up / connected
-- [ ] Add screenshots
+- [x] Add photos of the scale and how it is set up / connected
+- [x] Add screenshots
