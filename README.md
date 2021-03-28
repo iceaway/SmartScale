@@ -26,7 +26,7 @@ Here is what the prototype on my desk looks like:
 1. NodeMCUv3 microcontroller
 2. HX711 breakout board
 3. 3D-printed scale platform with 1 kg load cell inside
-4. Plastic box I had lying around for keeping the mains voltage safely away from poking fingers. The white cable has a regular power socket on the end for connecting the power plug of the scale. On the side of the box (out of view) is a [C14](https://www.electrokit.com/produkt/natbrunn-c14-jordad-flatstift-6-3mm/) socket for connecting the mains voltage. Inside this box the relay is located.
+4. Plastic box I had lying around for keeping the mains voltage safely away from poking fingers. The white cable has a regular power socket on the end for connecting the power plug of the grinder. On the side of the box (out of view) is a [C14](https://www.electrokit.com/produkt/natbrunn-c14-jordad-flatstift-6-3mm/) socket for connecting the mains voltage. Inside this box the relay is located.
 
 The connections are as follows:
 | MCU | HX177 | RELAY |
