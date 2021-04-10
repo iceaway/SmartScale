@@ -22,7 +22,9 @@ and ground. Make sure the relay can be controlled by a 3.3V signal, if you
 intend to power it directly from the ESP8266.
 
 Here is what the prototype on my desk looks like:
+
 <img src="https://github.com/iceaway/SmartScale/blob/master/images/everything.jpg?raw=true" alt="components making up the smart scale project" width="50%">
+
 1. NodeMCUv3 microcontroller
 2. HX711 breakout board
 3. 3D-printed scale platform with 1 kg load cell inside
@@ -49,7 +51,7 @@ tare the scale, see the current weight, configure the target weight (at which
 weight the relay will be toggled), and reset the relay for making another run.
 Below is a screenshot of the webpage on a mobile device.
 
-<img src="https://github.com/iceaway/SmartScale/blob/master/images/screenshot.jpg?raw=true" alt="smartscale screenshot">
+<img src="https://github.com/iceaway/SmartScale/blob/master/images/screenshot.jpg?raw=true" alt="smartscale screenshot" width="40%">
 
 The serial inteface has some basic configuration
 options, including calibration, which is not available on the web page yet. 
