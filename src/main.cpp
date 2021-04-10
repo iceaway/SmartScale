@@ -22,7 +22,7 @@
 
 void setup(void)
 {
-    String mdnsname = "SmartScale-" + String(ESP.getChipId(), HEX);
+    String mdnsname = "SmartScale";
 
     Serial.begin(9600);
     /* Delay here to not miss any output as we go from upload mode
