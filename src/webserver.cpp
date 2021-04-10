@@ -25,7 +25,7 @@ static AsyncWebServer server(HTTP_PORT);
 String processor(const String& var)
 {
     if (var == "STARTWEIGHT") {
-        String weight = String(eeprom_setpoint_get());
+        String weight = String(eeprom_setpoint_get(), 1);
         return weight;
     }
     return String();
@@ -41,10 +41,30 @@ static void get_root(AsyncWebServerRequest *request)
     request->send(LittleFS, "/index.html", "text/html", false, processor);
 }
 
+static void get_stylesheet(AsyncWebServerRequest *request)
+{
+    request->send(LittleFS, "/ss.css", "text/css");
+}
+
 static void get_weight(AsyncWebServerRequest *request)
 {
     String value;
     value = String(loadcell_get_weight());
+    request->send(200, "text/plain", value);
+}
+
+static void get_data(AsyncWebServerRequest *request)
+{
+    String value;
+    value = String(loadcell_get_weight(), 1);
+    if (control_get_relay())
+        value += ";1;";
+    else
+        value += ";0;";
+    value += String(control_get_elapsed_time());
+#ifdef DEBUG
+    Serial.println("Get data: " + value);
+#endif
     request->send(200, "text/plain", value);
 }
 
@@ -64,7 +84,21 @@ static void reset_relay(AsyncWebServerRequest *request)
 {
     control_reset_relay();
     request->send(200, "text/plain", "");
+#ifdef DEBUG
     Serial.println("Reset relay");
+#endif
+}
+
+static void toggle_relay(AsyncWebServerRequest *request)
+{
+    if (control_get_relay())
+        control_reset_relay();
+    else
+        control_set_relay();
+#ifdef DEBUG
+    Serial.println("Toggle relay");
+#endif
+    request->send(200, "text/plain", "");
 }
 
 static void set_weight_setpoint(AsyncWebServerRequest *request)
@@ -99,19 +133,13 @@ void webserver_setup()
 
     server.on("/", HTTP_GET, get_root);
 
-    // Send a GET request to <IP>/get?message=<message>
+    server.on("/ss.css", HTTP_GET, get_stylesheet);
+    server.on("/get_data", HTTP_GET, get_data);
+    server.on("/toggle_relay", HTTP_GET, toggle_relay);
     server.on("/weight", HTTP_GET, get_weight);
-
-    // Send a GET request to <IP>/get?message=<message>
     server.on("/tare", HTTP_GET, tare);
-
-    // Send a GET request to <IP>/get?message=<message>
     server.on("/tare_status", HTTP_GET, tare_status);
-
-    // Send a GET request to <IP>/get?message=<message>
     server.on("/reset_relay", HTTP_GET, reset_relay);
-
-    // Send a GET request to <IP>/get?message=<message>
     server.on("/set_weight_setpoint", HTTP_GET, set_weight_setpoint);
 
     // Not found error
