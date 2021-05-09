@@ -13,6 +13,7 @@ mains power stuff is enclosed in a plastic box, and the load cell is mounted to
 a very simple 3D-printed platform.
 
 ## Hardware hookup
+### Prototype
 Connect the ESP8266 to the SCK and DOUT pins on the HX711 breakout board (I use
 [this](https://www.electrokit.com/produkt/hx711-lastcellsforstarkare-monterad-pa-kort/) 
 particular board). The pins on the ESP8266 can be configured in the `config.h`
@@ -38,6 +39,16 @@ The connections are as follows:
 | D3  | NC    | S/Control |
 | 3.3V | VCC | VCC |
 | GND | GND | GND |
+### Version 2
+This is how version two of the project turned out, once I did a 3D-print of
+the scale platform that also fit the MCU + HX711 board, and the box containing
+the mains power and relay. The power box contains the relay and the guts of a
+wall-charger with a USB connector. The cable between the power box and scale
+platform has +5V, GND and the signal from the MCU that controls the relay. The
+power box is fed from by a C14 connector. I initially thought that I would power 
+the MCU separately with a USB cable, but decided against that to reduce the
+cable clutter). 
+<img src="https://github.com/iceaway/SmartScale/blob/master/images/project_v2.jpg?raw=true" alt="version 2 of the project with 3d-printed enclosures" width="50%">
 
 ## Usage
 When powered on the first time, no wifi-credentials will be stored in the
@@ -68,8 +79,8 @@ information on the possible commands.
 ### Hardware
 
 - [x] Upload FreeCad files for platform 
-- [ ] Improve CAD design to fit the ESP8266 and HX711 board
-- [ ] Design and print an enclosure for the mains power stuff and MCU
+- [x] Improve CAD design to fit the ESP8266 and HX711 board
+- [x] Design and print an enclosure for the mains power stuff and MCU
 - [ ] Design a custom PCB for mounting the ESP8266 and HX711 parts
 
 ### Misc
